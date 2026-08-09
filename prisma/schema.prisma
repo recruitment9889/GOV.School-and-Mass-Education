@@ -1,0 +1,213 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider  = "postgresql"
+}
+
+// ==========================================
+// AUTHENTICATION & USERS
+// ==========================================
+
+model User {
+  id           String        @id @default(uuid())
+  phoneNumber  String        @default("")
+  email        String?       @unique
+  passwordHash String?
+  firebaseUid  String?       @unique
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  
+  applications Application[]
+  notifications Notification[]
+}
+
+model AdminUser {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  name         String
+  passwordHash String
+  role         AdminRole     @default(MODERATOR)
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  
+  auditLogs    AuditLog[]
+}
+
+enum AdminRole {
+  SUPERADMIN
+  MODERATOR
+}
+
+// ==========================================
+// CORE APPLICATION
+// ==========================================
+
+model Application {
+  id              String        @id @default(uuid())
+  applicationNo   String        @unique // e.g. APP-2026-0001
+  userId          String
+  user            User          @relation(fields: [userId], references: [id])
+  
+  categoryId      String
+  category        Category      @relation(fields: [categoryId], references: [id])
+  
+  status          AppStatus     @default(DRAFT)
+  submittedAt     DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  personalDetails   PersonalDetails?
+  educationDetails  EducationalDetails[]
+  employmentDetails EmploymentDetails[]
+  documents         Document[]
+  statusHistory     ApplicationStatusHistory[]
+}
+
+enum AppStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+}
+
+// ==========================================
+// NORMALIZED DETAILS
+// ==========================================
+
+model PersonalDetails {
+  id            String      @id @default(uuid())
+  applicationId String      @unique
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  
+  firstName     String
+  lastName      String
+  dateOfBirth   DateTime
+  gender        Gender
+  aadhaarNumber String?     @unique
+  panNumber     String?
+  email         String?
+  address       String
+  city          String
+  state         String
+  pincode       String
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+model EducationalDetails {
+  id            String      @id @default(uuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  
+  degree        String
+  institution   String
+  yearOfPassing Int
+  percentage    Float
+}
+
+model EmploymentDetails {
+  id            String      @id @default(uuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  
+  companyName   String
+  designation   String
+  startDate     DateTime
+  endDate       DateTime?
+  isCurrent     Boolean     @default(false)
+}
+
+// ==========================================
+// DOCUMENTS & FILES
+// ==========================================
+
+model Document {
+  id            String      @id @default(uuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  
+  documentType  DocType
+  fileUrl       String
+  fileSize      Int?
+  uploadedAt    DateTime    @default(now())
+}
+
+enum DocType {
+  PHOTO
+  SIGNATURE
+  AADHAAR
+  PAN
+  DEGREE_CERT
+  EXPERIENCE_CERT
+  CASTE_CERT
+  OTHER
+}
+
+// ==========================================
+// SYSTEM & SETTINGS
+// ==========================================
+
+model Category {
+  id           String        @id @default(uuid())
+  name         String        @unique // Peon, Student, Employee, etc.
+  description  String?
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  
+  applications Application[]
+}
+
+model RecruitmentSettings {
+  id               String   @id @default("default")
+  title            String   @default("Online Recruitment 2026")
+  isOpen           Boolean  @default(false)
+  startDate        DateTime?
+  endDate          DateTime?
+  eligibilityRules String?
+  updatedAt        DateTime @updatedAt
+}
+
+model ApplicationStatusHistory {
+  id            String      @id @default(uuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  
+  previousStatus AppStatus?
+  newStatus      AppStatus
+  changedBy      String?    // Admin ID or System
+  remarks        String?
+  createdAt      DateTime   @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id          String    @id @default(uuid())
+  adminId     String
+  admin       AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  
+  action      String
+  targetType  String    // e.g. "Application", "Settings"
+  targetId    String
+  details     Json?
+  ipAddress   String?
+  createdAt   DateTime  @default(now())
+}
