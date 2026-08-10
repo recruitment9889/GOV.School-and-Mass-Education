@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resendKey = process.env.RESEND_API_KEY || "re_build_placeholder_key";
+const resend = new Resend(resendKey);
 
 function generateAppNo() {
   const randomDigits = Math.floor(100000 + Math.random() * 900000);
