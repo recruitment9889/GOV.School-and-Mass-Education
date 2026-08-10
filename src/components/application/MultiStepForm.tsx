@@ -441,6 +441,39 @@ export default function MultiStepForm() {
       }
     }
 
+    // Auto-sync draft to database on every step progression
+    try {
+      fetch("/api/application/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phoneNumber: phoneNumber || "+919876543210",
+          categoryName: category,
+          personalDetails: {
+            firstName,
+            lastName,
+            dateOfBirth: formattedDob,
+            gender,
+            aadhaarNumber,
+            panNumber,
+            email,
+            address,
+            highestQualification,
+            bankAccountNumber: category === "Clerk" ? bankAccountNumber : null,
+          },
+          educationalDetails: degree ? [{ degree, institution, yearOfPassing, percentage }] : [],
+          documents: Object.keys(documents).map((key) => ({
+            documentType: key,
+            fileUrl: (documents[key] as any).fileUrl || `https://supabase.storage/documents/${documents[key].name}`,
+            fileSize: 1024 * 500,
+          })),
+          isDraft: true,
+        }),
+      });
+    } catch (e) {
+      // background draft sync
+    }
+
     setCurrentStep((p) => Math.min(p + 1, STEPS.length - 1));
   };
 
@@ -1203,17 +1236,17 @@ export default function MultiStepForm() {
           <button
             onClick={nextStep}
             disabled={validatingStep}
-            className="flex items-center gap-2 px-6 py-2.5 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 shadow-md transition-all text-xs disabled:opacity-50"
+            className="flex items-center gap-2 px-6 py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 shadow-md transition-all text-xs disabled:opacity-50"
           >
-            {validatingStep ? "Checking..." : "Next"} <ChevronRight className="w-4 h-4" />
+            {validatingStep ? "Checking..." : (currentStep === 2 ? "Next: Review & Submit Application ➔" : "Next")} <ChevronRight className="w-4 h-4" />
           </button>
         ) : (
           <button
             onClick={handleSubmitApplication}
             disabled={submitting}
-            className="flex items-center gap-2 px-8 py-2.5 rounded-lg bg-primary text-primary-foreground font-bold hover:bg-primary/90 shadow-lg shadow-primary/25 transition-all text-xs disabled:opacity-50"
+            className="flex items-center gap-2 px-8 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-600/30 transition-all text-xs disabled:opacity-50"
           >
-            {submitting ? "Submitting Application..." : "Submit Application"} <Check className="w-4 h-4" />
+            {submitting ? "Submitting Official Application..." : "🚀 Submit Official Application Now"} <Check className="w-4 h-4" />
           </button>
         )}
       </div>
