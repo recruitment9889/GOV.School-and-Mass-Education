@@ -52,13 +52,23 @@ export async function POST(req: Request) {
       user = await prisma.user.findFirst({ where: { phoneNumber } });
     }
     if (!user && email) {
-      user = await prisma.user.findFirst({ where: { email } });
+      user = await prisma.user.findFirst({
+        where: { email: { equals: email.trim(), mode: "insensitive" } },
+      });
     }
     if (!user) {
       user = await prisma.user.create({
         data: {
           phoneNumber: phoneNumber || "+919876543210",
-          email: email,
+          email: email ? email.trim() : null,
+        },
+      });
+    } else if (email || phoneNumber) {
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          email: email ? email.trim() : user.email,
+          phoneNumber: phoneNumber && phoneNumber !== "+919876543210" ? phoneNumber : user.phoneNumber,
         },
       });
     }

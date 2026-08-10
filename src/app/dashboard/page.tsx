@@ -33,15 +33,21 @@ export default function DashboardPage() {
         const apps = data.applications || [];
         const registeredUsers = data.registeredUsers || [];
 
-        // Check if application exists in DB for this email or App No
+        const cleanEmail = email ? email.trim().toLowerCase() : "";
+        const cleanAppNo = appNo ? appNo.trim() : "";
+
+        // Prioritize exact Application Number match (e.g. APP-2026-153558), then email match
         const matchedApp = apps.find(
           (a: any) =>
-            (email && (a.user?.email === email || a.personalDetails?.email === email)) ||
-            (appNo && a.applicationNo === appNo && !a.applicationNo.startsWith("REG-"))
+            (cleanAppNo && a.applicationNo === cleanAppNo && !a.applicationNo.startsWith("REG-")) ||
+            (cleanEmail && (
+              (a.user?.email && a.user.email.trim().toLowerCase() === cleanEmail) ||
+              (a.personalDetails?.email && a.personalDetails.email.trim().toLowerCase() === cleanEmail)
+            ))
         );
 
         const matchedUser = registeredUsers.find(
-          (u: any) => email && u.email === email
+          (u: any) => cleanEmail && u.email && u.email.trim().toLowerCase() === cleanEmail
         );
 
         // IF ADMIN DELETED THE APPLICATION OR USER RECORD AFTER SUBMISSION
@@ -54,9 +60,9 @@ export default function DashboardPage() {
           return;
         }
 
-        if (matchedApp && matchedApp.personalDetails && matchedApp.personalDetails.firstName) {
+        if (matchedApp && matchedApp.status && matchedApp.status !== "DRAFT") {
           setIsRecordDeleted(false);
-          setAppStatus(matchedApp.status || "SUBMITTED");
+          setAppStatus(matchedApp.status);
 
           // Sync exact Application ID across user & admin portal
           setSubmittedAppNo(matchedApp.applicationNo);
@@ -67,6 +73,15 @@ export default function DashboardPage() {
           if (matchedApp.personalDetails?.firstName) {
             setApplicantName(`${matchedApp.personalDetails.firstName} ${matchedApp.personalDetails.lastName || ""}`);
           }
+        } else if (matchedApp && matchedApp.personalDetails && matchedApp.personalDetails.firstName) {
+          setIsRecordDeleted(false);
+          setSubmittedAppNo(matchedApp.applicationNo);
+          if (matchedApp.category?.name) setAppliedPosition(matchedApp.category.name);
+          if (matchedApp.personalDetails?.firstName) {
+            setApplicantName(`${matchedApp.personalDetails.firstName} ${matchedApp.personalDetails.lastName || ""}`);
+          }
+          // If draft with form details, indicate draft
+          setAppStatus("DRAFT");
         } else {
           // User registered but has not submitted a filled form yet
           setAppStatus("NONE");
