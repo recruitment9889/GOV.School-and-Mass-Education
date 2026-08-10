@@ -73,10 +73,17 @@ export async function POST(req: Request) {
       });
     }
 
-    // Check if an existing application already exists for this user
+    // Lock application resolution to existing user application by userId or email to prevent number fluctuation
     let existingApp = await prisma.application.findFirst({
-      where: { userId: user.id },
+      where: {
+        OR: [
+          { userId: user.id },
+          ...(email ? [{ personalDetails: { email: { equals: email.trim(), mode: "insensitive" as const } } }] : []),
+          ...(email ? [{ user: { email: { equals: email.trim(), mode: "insensitive" as const } } }] : []),
+        ],
+      },
       include: { personalDetails: true },
+      orderBy: { createdAt: "desc" },
     });
 
     const applicationNo = existingApp ? existingApp.applicationNo : generateAppNo();

@@ -173,20 +173,16 @@ export default function AdminDashboardPage() {
     const categoryName = app.category?.name || "Pending Selection";
 
     const docItems = [
-      { name: "Passport Photo", type: "PHOTO" },
-      { name: "Signature Image", type: "SIGNATURE" },
-      { name: "Aadhaar Card Document", type: "AADHAAR" },
-      { name: "Marksheet Certificate", type: "MARKSHEET_CERTIFICATE" },
-      { name: "Educational Certificate", type: "EDUCATIONAL_CERTIFICATE" },
-      { name: "Thumb Impression", type: "THUMB_IMPRESSION" },
-      { name: "Bank Passbook Copy", type: "BANK_PASSBOOK" },
-      { name: "PAN Card Document", type: "PAN_IMAGE" },
-      ...(categoryName === "Clerk"
-        ? [
-            { name: "Caste Certificate", type: "CASTE_CERTIFICATE" },
-            { name: "Computer PGDCA Certificate", type: "COMPUTER_PGDCA" },
-          ]
-        : []),
+      { name: "Passport Photo", types: ["PHOTO"] },
+      { name: "Signature Image", types: ["SIGNATURE"] },
+      { name: "Aadhaar Card Document", types: ["AADHAAR"] },
+      { name: "Marksheet Certificate", types: ["MARKSHEET_CERTIFICATE", "DEGREE_CERT"] },
+      { name: "Educational Certificate", types: ["EDUCATIONAL_CERTIFICATE", "DEGREE_CERT"] },
+      { name: "Thumb Impression", types: ["THUMB_IMPRESSION"] },
+      { name: "Bank Passbook Copy", types: ["BANK_PASSBOOK"] },
+      { name: "PAN Card Document", types: ["PAN_IMAGE", "PAN"] },
+      { name: "Caste Certificate", types: ["CASTE_CERTIFICATE", "CASTE_CERT"] },
+      { name: "Computer PGDCA Certificate", types: ["COMPUTER_PGDCA", "DEGREE_CERT"] },
     ];
 
     const htmlContent = `
@@ -297,7 +293,7 @@ export default function AdminDashboardPage() {
               </thead>
               <tbody>
                 ${docItems.map((item, idx) => {
-                  const uploadedDoc = docs.find((d: any) => d.documentType === item.type);
+                  const uploadedDoc = docs.find((d: any) => item.types.includes(d.documentType) || d.documentType === item.name) || docs[idx];
                   const isPdf = uploadedDoc ? isPdfFile(uploadedDoc.fileUrl) : false;
                   return `
                     <tr>
