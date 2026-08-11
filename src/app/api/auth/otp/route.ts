@@ -21,15 +21,16 @@ export async function POST(req: Request) {
 
       otpStore.set(cleanPhone, { otp: generatedOtp, expiresAt });
 
-      console.log(`[OTP API] Sent SMS OTP ${generatedOtp} to +91 ${cleanPhone}`);
+      console.log(`[OTP API] Generated SMS OTP ${generatedOtp} for +91 ${cleanPhone}`);
 
-      // Optional: Send real SMS via Fast2SMS API if FAST2SMS_API_KEY is configured
-      if (process.env.FAST2SMS_API_KEY) {
+      const fast2smsKey = process.env.FAST2SMS_API_KEY || "Sm0WFr8kvaDdCEqQ6Mzfbeu4RYZV2slKJntUo1Bh7j9iIwgyLXsUHyiI8CeFd4nTmN2gBhprGSWx5zZc";
+
+      if (fast2smsKey) {
         try {
-          await fetch("https://www.fast2sms.com/dev/bulkV2", {
+          const smsRes = await fetch("https://www.fast2sms.com/dev/bulkV2", {
             method: "POST",
             headers: {
-              authorization: process.env.FAST2SMS_API_KEY,
+              authorization: fast2smsKey,
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
@@ -38,6 +39,25 @@ export async function POST(req: Request) {
               numbers: cleanPhone,
             }),
           });
+          const smsData = await smsRes.json();
+          console.log("[Fast2SMS Response]:", smsData);
+
+          if (smsData.status_code === 999 || smsData.status_code === 996) {
+            // Try Quick SMS Route fallback
+            await fetch("https://www.fast2sms.com/dev/bulkV2", {
+              method: "POST",
+              headers: {
+                authorization: fast2smsKey,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                message: `Your Odisha School & Mass Education Recruitment OTP is ${generatedOtp}. Valid for 10 minutes.`,
+                language: "english",
+                route: "q",
+                numbers: cleanPhone,
+              }),
+            });
+          }
         } catch (smsErr) {
           console.error("Fast2SMS Dispatch Error:", smsErr);
         }
