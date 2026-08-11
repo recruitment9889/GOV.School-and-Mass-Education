@@ -34,30 +34,14 @@ export async function POST(req: Request) {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              variables_values: generatedOtp,
-              route: "otp",
+              message: `Your Odisha School & Mass Education Recruitment OTP code is ${generatedOtp}. Valid for 10 minutes.`,
+              language: "english",
+              route: "q",
               numbers: cleanPhone,
             }),
           });
           const smsData = await smsRes.json();
-          console.log("[Fast2SMS Response]:", smsData);
-
-          if (smsData.status_code === 999 || smsData.status_code === 996) {
-            // Try Quick SMS Route fallback
-            await fetch("https://www.fast2sms.com/dev/bulkV2", {
-              method: "POST",
-              headers: {
-                authorization: fast2smsKey,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                message: `Your Odisha School & Mass Education Recruitment OTP is ${generatedOtp}. Valid for 10 minutes.`,
-                language: "english",
-                route: "q",
-                numbers: cleanPhone,
-              }),
-            });
-          }
+          console.log("[Fast2SMS Dispatch Result]:", smsData);
         } catch (smsErr) {
           console.error("Fast2SMS Dispatch Error:", smsErr);
         }
