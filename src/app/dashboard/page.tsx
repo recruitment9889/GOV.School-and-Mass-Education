@@ -99,7 +99,7 @@ export default function DashboardPage() {
 
     const interval = setInterval(() => {
       fetchApplicantLiveStatus();
-    }, 3000);
+    }, 30000);
 
     return () => clearInterval(interval);
   }, []);

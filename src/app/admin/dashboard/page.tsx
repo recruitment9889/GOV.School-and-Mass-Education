@@ -116,7 +116,7 @@ export default function AdminDashboardPage() {
 
     const interval = setInterval(() => {
       fetchData();
-    }, 4000);
+    }, 30000);
 
     return () => clearInterval(interval);
   }, []);
