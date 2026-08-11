@@ -205,6 +205,27 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const getDocumentLabel = (type: string) => {
+    switch (type) {
+      case "PHOTO":
+        return "📷 Passport Size Photo";
+      case "SIGNATURE":
+        return "✍️ Specimen Signature";
+      case "AADHAAR":
+        return "🪪 Aadhaar Card (Front/Back)";
+      case "PAN":
+        return "💳 PAN Card";
+      case "DEGREE_CERT":
+        return "🎓 Educational Degree / Marksheet";
+      case "CASTE_CERT":
+        return "📜 Caste / Resident Certificate";
+      case "OTHER":
+        return "📄 Supporting Attachment Document";
+      default:
+        return `📄 ${type.replace(/_/g, " ")}`;
+    }
+  };
+
   const isPdfFile = (url: string) => {
     if (!url) return false;
     return url.toLowerCase().endsWith(".pdf") || url.toLowerCase().includes("pdf");
@@ -792,8 +813,16 @@ export default function AdminDashboardPage() {
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   {editingApp.documents && editingApp.documents.length > 0 ? (
-                    editingApp.documents.map((doc: any) => {
+                    Array.from(
+                      editingApp.documents
+                        .reduce((map: Map<string, any>, doc: any) => {
+                          map.set(doc.documentType, doc);
+                          return map;
+                        }, new Map<string, any>())
+                        .values()
+                    ).map((doc: any) => {
                       const pdf = isPdfFile(doc.fileUrl);
+                      const label = getDocumentLabel(doc.documentType);
                       return (
                         <div
                           key={doc.id}
@@ -801,15 +830,16 @@ export default function AdminDashboardPage() {
                         >
                           <div className="space-y-0.5 truncate pr-2">
                             <span className="font-bold text-zinc-200 block text-[11px] truncate flex items-center gap-1.5">
-                              {pdf ? <span className="text-rose-400 font-bold">📄 PDF</span> : <span className="text-indigo-400 font-bold">🖼️ IMG</span>}
-                              {doc.documentType.replace("_", " ")}
+                              {label}
                             </span>
-                            <span className="text-[10px] text-zinc-500 font-mono block truncate">{doc.fileUrl}</span>
+                            <span className="text-[10px] text-zinc-500 font-mono block truncate">
+                              {pdf ? "PDF Document" : "Image File"} • {doc.documentType}
+                            </span>
                           </div>
 
                           <div className="flex gap-1.5 shrink-0">
                             <button
-                              onClick={() => setPreviewFile({ url: doc.fileUrl, title: `${doc.documentType} - ${editingApp.applicationNo}`, isPdf: pdf })}
+                              onClick={() => setPreviewFile({ url: doc.fileUrl, title: `${label} - ${editingApp.applicationNo}`, isPdf: pdf })}
                               className="px-2.5 py-1.5 bg-indigo-600/30 hover:bg-indigo-600 text-indigo-200 hover:text-white border border-indigo-500/40 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1 shadow-sm"
                             >
                               <Eye className="w-3.5 h-3.5" /> Preview

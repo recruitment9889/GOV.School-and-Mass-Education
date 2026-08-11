@@ -105,6 +105,12 @@ export async function POST(req: Request) {
         });
       }
 
+      if (documents && documents.length > 0) {
+        await prisma.document.deleteMany({
+          where: { applicationId: existingApp.id },
+        });
+      }
+
       // Update existing application AND save uploaded documents
       application = await prisma.application.update({
         where: { id: existingApp.id },
