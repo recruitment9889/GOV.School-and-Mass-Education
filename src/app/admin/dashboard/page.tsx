@@ -41,7 +41,7 @@ export default function AdminDashboardPage() {
     if (typeof window !== "undefined") {
       localStorage.removeItem("admin_token");
     }
-    router.push("/admin/login");
+    window.location.href = "/";
   };
 
   const handlePurgeAllData = async () => {
@@ -626,46 +626,14 @@ export default function AdminDashboardPage() {
                           </span>
                         </td>
 
-                        {/* Download PDF & Direct PDF / Image File Downloads */}
-                        <td className="p-3.5 space-y-2">
+                        {/* Download Full PDF Report Only */}
+                        <td className="p-3.5 text-center">
                           <button
                             onClick={() => downloadApplicationPDF(app)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-600 text-white rounded text-[11px] font-bold hover:bg-indigo-500 transition-all shadow-sm"
+                            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition-all shadow-md"
                           >
-                            <Printer className="w-3 h-3" /> Download Full PDF Report
+                            <Printer className="w-4 h-4" /> Download Full PDF Report
                           </button>
-
-                          <div className="flex flex-wrap gap-1.5 pt-1">
-                            {app.documents && app.documents.length > 0 ? (
-                              app.documents.map((doc: any) => {
-                                const pdf = isPdfFile(doc.fileUrl);
-                                return (
-                                  <div key={doc.id} className="inline-flex items-center gap-1">
-                                    <button
-                                      onClick={() => setPreviewFile({ url: doc.fileUrl, title: `${doc.documentType} - ${app.applicationNo}`, isPdf: pdf })}
-                                      className={`inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold transition-all border ${
-                                        pdf
-                                          ? "bg-rose-500/20 text-rose-300 border-rose-500/30 hover:bg-rose-600 hover:text-white"
-                                          : "bg-indigo-500/20 text-indigo-300 border-indigo-500/30 hover:bg-indigo-600 hover:text-white"
-                                      }`}
-                                      title={`Preview ${doc.documentType}`}
-                                    >
-                                      <Eye className="w-3 h-3" /> {pdf ? "📄 PDF" : "🖼️ Image"} - {doc.documentType.replace("_", " ")}
-                                    </button>
-                                    <button
-                                      onClick={() => downloadDocument(doc.fileUrl, `${app.applicationNo}_${doc.documentType}`)}
-                                      className="p-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded text-[10px] border border-zinc-700"
-                                      title="Download file"
-                                    >
-                                      <Download className="w-3 h-3" />
-                                    </button>
-                                  </div>
-                                );
-                              })
-                            ) : (
-                              <span className="text-zinc-500 text-[10px] block">No form submitted yet</span>
-                            )}
-                          </div>
                         </td>
 
                         {/* Working One-Click Approve & Reject Buttons */}
