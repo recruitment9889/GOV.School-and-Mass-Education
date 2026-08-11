@@ -21,6 +21,13 @@ export default function EmailAuthForm() {
     setLoading(true);
     setError("");
 
+    const gmailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.com$/i;
+    if (!gmailRegex.test(email.trim())) {
+      setError("Please enter a valid Email address ending with .com (e.g. yourname@gmail.com).");
+      setLoading(false);
+      return;
+    }
+
     if (isRegister && password !== confirmPassword) {
       setError("Passwords do not match. Please check and try again.");
       setLoading(false);

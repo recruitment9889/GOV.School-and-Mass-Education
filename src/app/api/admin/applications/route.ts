@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { sendApprovalEmail } from "@/lib/email-service";
 import crypto from "crypto";
 
 function hashPassword(password: string) {
@@ -201,6 +202,21 @@ export async function PATCH(req: Request) {
         where: { id: updatedApp.userId },
         data: { passwordHash: hashPassword(newPassword) },
       });
+    }
+
+    if (status === "APPROVED") {
+      const recipient = updatedApp.personalDetails?.email || updatedApp.user?.email;
+      if (recipient) {
+        const applicantName = updatedApp.personalDetails?.firstName
+          ? `${updatedApp.personalDetails.firstName} ${updatedApp.personalDetails.lastName || ""}`
+          : "Applicant";
+        await sendApprovalEmail({
+          recipientEmail: recipient,
+          applicantName,
+          applicationNo: updatedApp.applicationNo,
+          categoryName: (updatedApp as any).category?.name,
+        });
+      }
     }
 
     return NextResponse.json({ success: true, application: updatedApp });

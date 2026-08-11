@@ -23,6 +23,14 @@ export async function POST(req: Request) {
     const hashed = hashPassword(password);
     const normalizedEmail = email.toLowerCase().trim();
 
+    const gmailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.com$/i;
+    if (!gmailRegex.test(normalizedEmail)) {
+      return NextResponse.json(
+        { message: "Please enter a valid Email address ending with .com (e.g. yourname@gmail.com)." },
+        { status: 400 }
+      );
+    }
+
     if (isRegister) {
       // Check duplicate email in User or PersonalDetails
       const existingUser = await prisma.user.findFirst({

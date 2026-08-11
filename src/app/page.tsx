@@ -5,32 +5,6 @@ import { ShieldCheck, FileSpreadsheet, UserCheck, ArrowRight } from "lucide-reac
 export default function HomePage() {
   return (
     <div className="min-h-screen flex flex-col bg-muted/20">
-      {/* Top Navbar */}
-      <header className="w-full bg-background border-b border-border sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img
-              src="/odisha-logo.png"
-              alt="Government of Odisha Seal"
-              className="w-12 h-12 object-contain drop-shadow-md"
-            />
-            <div>
-              <span className="font-extrabold text-base leading-none block text-foreground">Government of Odisha</span>
-              <span className="text-xs text-muted-foreground font-semibold">School & Mass Education Department</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <Link
-              href="/admin/login"
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium border border-zinc-700 bg-zinc-900 text-zinc-100 hover:bg-zinc-800 rounded-lg transition-all shadow-sm"
-            >
-              <ShieldCheck className="w-4 h-4 text-emerald-400" /> Admin Portal
-            </Link>
-          </div>
-        </div>
-      </header>
-
       {/* Hero & Login Section */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-16 grid md:grid-cols-2 gap-12 items-center">
         
