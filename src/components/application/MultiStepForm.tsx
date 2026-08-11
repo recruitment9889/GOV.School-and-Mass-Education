@@ -358,7 +358,7 @@ export default function MultiStepForm() {
         if (fallbackRes.ok && fallbackData.success) {
           setUseFallbackOtp(true);
           setConfirmationResult({} as any);
-          setOtpMessage(`${fallbackData.message} (Verification Code: ${fallbackData.otpPreview})`);
+          setOtpMessage(fallbackData.message);
         } else {
           setOtpError(fallbackData.message || "Failed to send OTP.");
         }

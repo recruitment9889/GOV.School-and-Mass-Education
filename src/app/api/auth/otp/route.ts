@@ -21,13 +21,31 @@ export async function POST(req: Request) {
 
       otpStore.set(cleanPhone, { otp: generatedOtp, expiresAt });
 
-      console.log(`[OTP API] Sent OTP ${generatedOtp} to +91 ${cleanPhone}`);
+      console.log(`[OTP API] Sent SMS OTP ${generatedOtp} to +91 ${cleanPhone}`);
+
+      // Optional: Send real SMS via Fast2SMS API if FAST2SMS_API_KEY is configured
+      if (process.env.FAST2SMS_API_KEY) {
+        try {
+          await fetch("https://www.fast2sms.com/dev/bulkV2", {
+            method: "POST",
+            headers: {
+              authorization: process.env.FAST2SMS_API_KEY,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              variables_values: generatedOtp,
+              route: "otp",
+              numbers: cleanPhone,
+            }),
+          });
+        } catch (smsErr) {
+          console.error("Fast2SMS Dispatch Error:", smsErr);
+        }
+      }
 
       return NextResponse.json({
         success: true,
-        message: `OTP sent successfully to +91 ${cleanPhone}`,
-        // For smooth testing without SMS gateway charges:
-        otpPreview: generatedOtp,
+        message: `OTP sent successfully to +91 ${cleanPhone}. Please enter the 6-digit code received on your phone.`,
       });
     }
 
