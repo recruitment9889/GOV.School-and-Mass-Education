@@ -365,7 +365,60 @@ export default function MultiStepForm() {
     }
   };
 
-  const handleFileUpload = (docType: string, e: React.ChangeEvent<HTMLInputElement>) => {
+  const compressImageIfNeeded = (file: File): Promise<string> => {
+    return new Promise((resolve) => {
+      if (!file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve((e.target?.result as string) || "");
+        reader.readAsDataURL(file);
+        return;
+      }
+
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const MAX_WIDTH = 1200;
+        const MAX_HEIGHT = 1200;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height = Math.round((height * MAX_WIDTH) / width);
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width = Math.round((width * MAX_HEIGHT) / height);
+            height = MAX_HEIGHT;
+          }
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.72);
+          resolve(compressedDataUrl);
+        } else {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve((e.target?.result as string) || "");
+          reader.readAsDataURL(file);
+        }
+      };
+      img.onerror = () => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve((e.target?.result as string) || "");
+        reader.readAsDataURL(file);
+      };
+      img.src = url;
+    });
+  };
+
+  const handleFileUpload = async (docType: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       // 2 MB Maximum File Size Validation Check (2 * 1024 * 1024 bytes)
@@ -377,10 +430,11 @@ export default function MultiStepForm() {
       }
       setStepError(""); // Clear previous errors if file is valid
 
-      const sizeInMb = (file.size / (1024 * 1024)).toFixed(2);
-      const reader = new FileReader();
-      reader.onload = (uploadEvent) => {
-        const fileUrl = (uploadEvent.target?.result as string) || `https://supabase.storage/documents/${file.name}`;
+      try {
+        const fileUrl = await compressImageIfNeeded(file);
+        const compressedSizeKb = Math.round((fileUrl.length * 0.75) / 1024);
+        const sizeInMb = (compressedSizeKb / 1024).toFixed(2);
+
         const docObj = {
           name: file.name,
           size: `${sizeInMb} MB`,
@@ -391,8 +445,9 @@ export default function MultiStepForm() {
           [docType]: docObj,
         }));
         saveFileToIndexedDB(docType, docObj);
-      };
-      reader.readAsDataURL(file);
+      } catch (err) {
+        console.error("File processing failed:", err);
+      }
     }
   };
 
