@@ -6,11 +6,20 @@ import { Check, ChevronRight, ChevronLeft, Upload, FileText, CheckCircle2, Shiel
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 
+import { saveFileToIndexedDB, getAllFilesFromIndexedDB, clearFilesFromIndexedDB } from "@/lib/file-storage";
+
 const STEPS = [
   "Personal & OTP",
   "Education & Certificates",
   "Required Documents",
   "Review & Submit"
+];
+
+const ODISHA_DISTRICTS = [
+  "Khordha", "Cuttack", "Bhadrak", "Puri", "Ganjam", "Sambalpur", "Balasore", "Angul",
+  "Bargarh", "Bolangir", "Boudh", "Deogarh", "Dhenkanal", "Gajapati", "Jagatsinghpur",
+  "Jajpur", "Jharsuguda", "Kalahandi", "Kandhamal", "Kendrapara", "Keonjhar", "Koraput",
+  "Malkangiri", "Mayurbhanj", "Nabarangpur", "Nayagarh", "Nuapada", "Rayagada", "Subarnapur", "Sundergarh"
 ];
 
 const MONTHS = [
@@ -51,6 +60,9 @@ export default function MultiStepForm() {
 
   const [gender, setGender] = useState("MALE");
   const [address, setAddress] = useState("");
+  const [district, setDistrict] = useState("Khordha");
+  const [block, setBlock] = useState("");
+  const [schoolName, setSchoolName] = useState("");
   const [aadhaarNumber, setAadhaarNumber] = useState("");
   const [panNumber, setPanNumber] = useState("");
   const [highestQualification, setHighestQualification] = useState("10th Standard");
@@ -93,6 +105,15 @@ export default function MultiStepForm() {
         setLastName(parts.slice(1).join(" ") || "");
       }
 
+      // Load persisted files from IndexedDB
+      const loadIndexedDBFiles = async () => {
+        const storedFiles = await getAllFilesFromIndexedDB();
+        if (storedFiles && Object.keys(storedFiles).length > 0) {
+          setDocuments((prev) => ({ ...prev, ...storedFiles }));
+        }
+      };
+      loadIndexedDBFiles();
+
       // Check draft data in localStorage
       const draftRaw = localStorage.getItem("applicant_draft_data");
       const isSubmitted = localStorage.getItem("application_submitted");
@@ -111,6 +132,9 @@ export default function MultiStepForm() {
           if (draft.dobYear) setDobYear(draft.dobYear);
           if (draft.gender) setGender(draft.gender);
           if (draft.address) setAddress(draft.address);
+          if (draft.district) setDistrict(draft.district);
+          if (draft.block) setBlock(draft.block);
+          if (draft.schoolName) setSchoolName(draft.schoolName);
           if (draft.highestQualification) setHighestQualification(draft.highestQualification);
           if (draft.bankAccountNumber) setBankAccountNumber(draft.bankAccountNumber);
           if (draft.phoneNumber) setPhoneNumber(draft.phoneNumber);
@@ -119,7 +143,7 @@ export default function MultiStepForm() {
           if (draft.institution) setInstitution(draft.institution);
           if (draft.yearOfPassing) setYearOfPassing(draft.yearOfPassing);
           if (draft.percentage) setPercentage(draft.percentage);
-          if (draft.documents) setDocuments(draft.documents);
+          if (draft.documents) setDocuments((prev) => ({ ...draft.documents, ...prev }));
 
           setDraftSavedBanner(`Welcome back! Your draft application has been restored at Step ${draft.currentStep + 1} (${STEPS[draft.currentStep]}).`);
         } catch (e) {
@@ -129,7 +153,7 @@ export default function MultiStepForm() {
     }
   }, []);
 
-  // Auto-save form inputs to localStorage draft on every change (Without heavy base64 strings)
+  // Auto-save form inputs to localStorage draft on every change
   useEffect(() => {
     if (typeof window !== "undefined") {
       const isSubmitted = localStorage.getItem("application_submitted");
@@ -155,6 +179,9 @@ export default function MultiStepForm() {
           dobYear,
           gender,
           address,
+          district,
+          block,
+          schoolName,
           highestQualification,
           bankAccountNumber,
           phoneNumber,
@@ -185,6 +212,9 @@ export default function MultiStepForm() {
     dobYear,
     gender,
     address,
+    district,
+    block,
+    schoolName,
     highestQualification,
     bankAccountNumber,
     phoneNumber,
@@ -351,14 +381,16 @@ export default function MultiStepForm() {
       const reader = new FileReader();
       reader.onload = (uploadEvent) => {
         const fileUrl = (uploadEvent.target?.result as string) || `https://supabase.storage/documents/${file.name}`;
+        const docObj = {
+          name: file.name,
+          size: `${sizeInMb} MB`,
+          fileUrl: fileUrl,
+        };
         setDocuments((prev) => ({
           ...prev,
-          [docType]: {
-            name: file.name,
-            size: `${sizeInMb} MB`,
-            fileUrl: fileUrl,
-          },
+          [docType]: docObj,
         }));
+        saveFileToIndexedDB(docType, docObj);
       };
       reader.readAsDataURL(file);
     }
@@ -371,6 +403,10 @@ export default function MultiStepForm() {
     if (currentStep === 0) {
       if (!firstName.trim() || !lastName.trim()) {
         setStepError("Please enter your First Name and Last Name.");
+        return;
+      }
+      if (!district.trim() || !block.trim() || !schoolName.trim()) {
+        setStepError("Please select/enter your District, Block, and Target School Name.");
         return;
       }
       if (!/^\d{12}$/.test(aadhaarNumber)) {
@@ -458,6 +494,9 @@ export default function MultiStepForm() {
             panNumber,
             email,
             address,
+            district,
+            block,
+            schoolName,
             highestQualification,
             bankAccountNumber: category === "Clerk" ? bankAccountNumber : null,
           },
@@ -502,6 +541,9 @@ export default function MultiStepForm() {
             panNumber,
             email,
             address,
+            district,
+            block,
+            schoolName,
             highestQualification,
             bankAccountNumber: category === "Clerk" ? bankAccountNumber : null,
           },
@@ -522,6 +564,7 @@ export default function MultiStepForm() {
         localStorage.setItem("application_submitted", "true");
         localStorage.setItem("submitted_app_no", finalAppNo);
         localStorage.removeItem("applicant_draft_data");
+        clearFilesFromIndexedDB();
       }
 
       setSubmittedAppNo(finalAppNo);
@@ -611,9 +654,12 @@ export default function MultiStepForm() {
       
       {/* Top Header Bar with Save Draft & Exit Button */}
       <div className="bg-muted/40 border-b px-6 py-4 flex items-center justify-between">
-        <div>
-          <span className="text-[11px] font-bold text-primary uppercase tracking-wider block">Recruitment Application</span>
-          <h3 className="font-bold text-sm">Application Form ({category} Position)</h3>
+        <div className="flex items-center gap-3">
+          <img src="/odisha-logo.png" alt="Government of Odisha Seal" className="w-10 h-10 object-contain drop-shadow" />
+          <div>
+            <span className="text-[11px] font-bold text-primary uppercase tracking-wider block">Recruitment Application</span>
+            <h3 className="font-bold text-sm">Application Form ({category} Position)</h3>
+          </div>
         </div>
 
         <button
@@ -872,6 +918,44 @@ export default function MultiStepForm() {
                   <option value="Graduate">Graduation / Bachelor Degree</option>
                   <option value="Post Graduate">Post Graduation / Master Degree</option>
                 </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">District *</label>
+                <select
+                  value={district}
+                  onChange={(e) => setDistrict(e.target.value)}
+                  className="w-full p-2.5 rounded-lg border bg-background focus:ring-2 focus:ring-primary outline-none"
+                  required
+                >
+                  {ODISHA_DISTRICTS.map((d) => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Block / Tehsildar Block *</label>
+                <input
+                  type="text"
+                  value={block}
+                  onChange={(e) => setBlock(e.target.value)}
+                  className="w-full p-2.5 rounded-lg border bg-background focus:ring-2 focus:ring-primary outline-none"
+                  placeholder="e.g. Bhadrak Sadar / Cuttack Block"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <label className="text-sm font-semibold text-primary">Applying for Which School (Target School Name) *</label>
+                <input
+                  type="text"
+                  value={schoolName}
+                  onChange={(e) => setSchoolName(e.target.value)}
+                  className="w-full p-2.5 rounded-lg border bg-background focus:ring-2 focus:ring-primary outline-none font-semibold text-foreground"
+                  placeholder="e.g. Government High School, Unit 1, Bhubaneswar"
+                  required
+                />
               </div>
 
               {category === "Clerk" && (

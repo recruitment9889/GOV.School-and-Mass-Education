@@ -92,6 +92,9 @@ model PersonalDetails {
   panNumber     String?
   email         String?
   address       String
+  district      String?
+  block         String?
+  schoolName    String?
   city          String
   state         String
   pincode       String

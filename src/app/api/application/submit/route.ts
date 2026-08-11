@@ -128,6 +128,9 @@ export async function POST(req: Request) {
                     address: personalDetails.bankAccountNumber
                       ? `${personalDetails.address || ""} (Bank Acc: ${personalDetails.bankAccountNumber})`
                       : personalDetails.address || "",
+                    district: personalDetails.district || null,
+                    block: personalDetails.block || null,
+                    schoolName: personalDetails.schoolName || null,
                     city: personalDetails.city || "Bhubaneswar",
                     state: personalDetails.state || "Odisha",
                     pincode: personalDetails.pincode || "751001",
@@ -142,6 +145,9 @@ export async function POST(req: Request) {
                     aadhaarNumber: personalDetails.aadhaarNumber || null,
                     panNumber: personalDetails.panNumber || null,
                     email: personalDetails.email || null,
+                    district: personalDetails.district || null,
+                    block: personalDetails.block || null,
+                    schoolName: personalDetails.schoolName || null,
                     address: personalDetails.bankAccountNumber
                       ? `${personalDetails.address || ""} (Bank Acc: ${personalDetails.bankAccountNumber})`
                       : personalDetails.address || "",
@@ -192,6 +198,9 @@ export async function POST(req: Request) {
                   aadhaarNumber: personalDetails.aadhaarNumber || null,
                   panNumber: personalDetails.panNumber || null,
                   email: personalDetails.email || null,
+                  district: personalDetails.district || null,
+                  block: personalDetails.block || null,
+                  schoolName: personalDetails.schoolName || null,
                   address: personalDetails.bankAccountNumber
                     ? `${personalDetails.address || ""} (Bank Acc: ${personalDetails.bankAccountNumber})`
                     : personalDetails.address || "",

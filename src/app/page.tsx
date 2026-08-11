@@ -9,12 +9,14 @@ export default function HomePage() {
       <header className="w-full bg-background border-b border-border sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg shadow-md shadow-primary/20">
-              RP
-            </div>
+            <img
+              src="/odisha-logo.png"
+              alt="Government of Odisha Seal"
+              className="w-12 h-12 object-contain drop-shadow-md"
+            />
             <div>
-              <span className="font-bold text-base leading-none block">Government of Odisha</span>
-              <span className="text-xs text-muted-foreground font-medium">School & Mass Education Department</span>
+              <span className="font-extrabold text-base leading-none block text-foreground">Government of Odisha</span>
+              <span className="text-xs text-muted-foreground font-semibold">School & Mass Education Department</span>
             </div>
           </div>
 
@@ -34,8 +36,15 @@ export default function HomePage() {
         
         {/* Left Column: Portal Information & Notice */}
         <div className="space-y-6">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold">
-            <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span> Recruitment Drive 2026
+          <div className="flex items-center gap-4">
+            <img
+              src="/odisha-logo.png"
+              alt="Government of Odisha Official Seal"
+              className="w-20 h-20 sm:w-24 sm:h-24 object-contain drop-shadow-lg"
+            />
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold">
+              <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span> Recruitment Drive 2026
+            </div>
           </div>
 
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-foreground leading-[1.15]">

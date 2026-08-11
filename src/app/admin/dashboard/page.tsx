@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Users, FileText, CheckCircle, XCircle, TrendingUp, BarChart3, Search, Edit3, X, Save, Mail, UserCheck, Download, Trash2, Key, ShieldCheck, Check, Printer, Eye, Image as ImageIcon, FileCheck, ExternalLink } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Users, FileText, CheckCircle, XCircle, TrendingUp, BarChart3, Search, Edit3, X, Save, Mail, UserCheck, Download, Trash2, Key, ShieldCheck, Check, Printer, Eye, Image as ImageIcon, FileCheck, ExternalLink, LogOut } from "lucide-react";
 
 export default function AdminDashboardPage() {
+  const router = useRouter();
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalApplications: 0,
@@ -33,6 +35,59 @@ export default function AdminDashboardPage() {
 
   // Lightbox Preview Modal State (Images or PDFs)
   const [previewFile, setPreviewFile] = useState<{ url: string; title: string; isPdf: boolean } | null>(null);
+
+  const handleAdminLogout = () => {
+    document.cookie = "admin_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("admin_token");
+    }
+    router.push("/admin/login");
+  };
+
+  const handlePurgeAllData = async () => {
+    if (!confirm("⚠️ CAUTION: Are you sure you want to PERMANENTLY DELETE ALL uploaded files, user accounts, and submitted applications from the database?")) return;
+    try {
+      const res = await fetch("/api/admin/applications?purge=all", {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        alert("All uploaded files and applications have been successfully purged!");
+        fetchData();
+      }
+    } catch (e) {
+      console.error("Purge failed:", e);
+    }
+  };
+
+  const downloadDocument = async (fileUrl: string, fileName: string) => {
+    try {
+      let blob: Blob;
+      if (fileUrl.startsWith("data:")) {
+        const parts = fileUrl.split(";base64,");
+        const contentType = parts[0].replace("data:", "");
+        const raw = window.atob(parts[1] || "");
+        const rawLength = raw.length;
+        const uInt8Array = new Uint8Array(rawLength);
+        for (let i = 0; i < rawLength; ++i) {
+          uInt8Array[i] = raw.charCodeAt(i);
+        }
+        blob = new Blob([uInt8Array], { type: contentType });
+      } else {
+        const res = await fetch(fileUrl);
+        blob = await res.blob();
+      }
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+    } catch (e) {
+      window.open(fileUrl, "_blank");
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -262,6 +317,9 @@ export default function AdminDashboardPage() {
               <div><span class="label">Aadhaar Card Number</span><span class="value" style="font-family: monospace;">${pd?.aadhaarNumber || "Pending Form Submission"}</span></div>
               <div><span class="label">PAN Card Number</span><span class="value" style="font-family: monospace; text-transform: uppercase;">${pd?.panNumber || "Pending Form Submission"}</span></div>
               <div><span class="label">Gender</span><span class="value">${pd?.gender || "Pending"}</span></div>
+              <div><span class="label">District</span><span class="value">${pd?.district || "Pending"}</span></div>
+              <div><span class="label">Block / Tehsil</span><span class="value">${pd?.block || "Pending"}</span></div>
+              <div><span class="label">Applying for Which School</span><span class="value" style="color: #1e3a8a; font-weight: 800;">${pd?.schoolName || "Pending"}</span></div>
               <div><span class="label">Residential Address</span><span class="value">${pd?.address || "Pending Form Submission"}</span></div>
             </div>
           </div>
@@ -357,11 +415,18 @@ export default function AdminDashboardPage() {
         
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-800 pb-6">
-          <div>
-            <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest block mb-1">
-              Government of Odisha • School & Mass Education Department
-            </span>
-            <h1 className="text-3xl font-extrabold tracking-tight">Admin Live Dashboard & Applicant Portal</h1>
+          <div className="flex items-center gap-3">
+            <img
+              src="/odisha-logo.png"
+              alt="Government of Odisha Seal"
+              className="w-12 h-12 object-contain drop-shadow"
+            />
+            <div>
+              <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest block mb-1">
+                Government of Odisha • School & Mass Education Department
+              </span>
+              <h1 className="text-3xl font-extrabold tracking-tight">Admin Live Dashboard & Applicant Portal</h1>
+            </div>
           </div>
           
           <div className="flex items-center gap-3">
@@ -374,6 +439,13 @@ export default function AdminDashboardPage() {
             <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-lg text-xs font-bold">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Live Supabase DB Sync
             </div>
+
+            <button
+              onClick={handleAdminLogout}
+              className="flex items-center gap-1.5 px-4 py-2 bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/30 rounded-lg text-xs font-bold transition-all shadow-sm"
+            >
+              <LogOut className="w-4 h-4" /> Sign Out
+            </button>
           </div>
         </div>
 
@@ -436,7 +508,15 @@ export default function AdminDashboardPage() {
               <p className="text-xs text-zinc-400">View document photos & PDFs, download full reports, approve/reject applications, reset passwords, or remove accounts.</p>
             </div>
 
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-3 items-center">
+              <button
+                onClick={handlePurgeAllData}
+                className="px-3.5 py-2 bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/30 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm"
+                title="Delete all uploaded files and database records"
+              >
+                <Trash2 className="w-3.5 h-3.5" /> Purge All Saved Files
+              </button>
+
               <div className="relative">
                 <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
@@ -478,7 +558,7 @@ export default function AdminDashboardPage() {
                 <tr>
                   <th className="p-3.5">App #</th>
                   <th className="p-3.5">Position</th>
-                  <th className="p-3.5">Applicant Name</th>
+                  <th className="p-3.5">Applicant & Target School</th>
                   <th className="p-3.5">Registered Gmail</th>
                   <th className="p-3.5">Mobile OTP</th>
                   <th className="p-3.5">Status & Verification</th>
@@ -515,9 +595,13 @@ export default function AdminDashboardPage() {
                             </span>
                           )}
                         </td>
-                        <td className="p-3.5 font-semibold">
+                        <td className="p-3.5 space-y-0.5">
                           {hasSubmittedDetails ? (
-                            `${app.personalDetails.firstName} ${app.personalDetails.lastName}`
+                            <>
+                              <div className="font-semibold text-zinc-100">{app.personalDetails.firstName} {app.personalDetails.lastName}</div>
+                              <div className="text-[10px] text-zinc-400 font-mono">Dist: {app.personalDetails.district || 'Khordha'} | Block: {app.personalDetails.block || 'N/A'}</div>
+                              <div className="text-[10px] text-indigo-300 font-semibold truncate max-w-[180px]">School: {app.personalDetails.schoolName || 'N/A'}</div>
+                            </>
                           ) : (
                             <span className="text-zinc-500 text-[11px] italic font-normal">Pending Form Submission</span>
                           )}
@@ -556,21 +640,26 @@ export default function AdminDashboardPage() {
                               app.documents.map((doc: any) => {
                                 const pdf = isPdfFile(doc.fileUrl);
                                 return (
-                                  <a
-                                    key={doc.id}
-                                    href={doc.fileUrl}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    download
-                                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded text-[10px] font-bold transition-all border ${
-                                      pdf
-                                        ? "bg-rose-500/20 text-rose-300 border-rose-500/30 hover:bg-rose-600 hover:text-white"
-                                        : "bg-indigo-500/20 text-indigo-300 border-indigo-500/30 hover:bg-indigo-600 hover:text-white"
-                                    }`}
-                                    title={`Download ${doc.documentType}`}
-                                  >
-                                    <Download className="w-3 h-3" /> {pdf ? "📄 PDF" : "🖼️ Image"} - {doc.documentType.replace("_", " ")}
-                                  </a>
+                                  <div key={doc.id} className="inline-flex items-center gap-1">
+                                    <button
+                                      onClick={() => setPreviewFile({ url: doc.fileUrl, title: `${doc.documentType} - ${app.applicationNo}`, isPdf: pdf })}
+                                      className={`inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold transition-all border ${
+                                        pdf
+                                          ? "bg-rose-500/20 text-rose-300 border-rose-500/30 hover:bg-rose-600 hover:text-white"
+                                          : "bg-indigo-500/20 text-indigo-300 border-indigo-500/30 hover:bg-indigo-600 hover:text-white"
+                                      }`}
+                                      title={`Preview ${doc.documentType}`}
+                                    >
+                                      <Eye className="w-3 h-3" /> {pdf ? "📄 PDF" : "🖼️ Image"} - {doc.documentType.replace("_", " ")}
+                                    </button>
+                                    <button
+                                      onClick={() => downloadDocument(doc.fileUrl, `${app.applicationNo}_${doc.documentType}`)}
+                                      className="p-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded text-[10px] border border-zinc-700"
+                                      title="Download file"
+                                    >
+                                      <Download className="w-3 h-3" />
+                                    </button>
+                                  </div>
                                 );
                               })
                             ) : (
@@ -712,6 +801,8 @@ export default function AdminDashboardPage() {
                 <p><span className="text-zinc-500">Applicant:</span> <strong>{editingApp.personalDetails?.firstName ? `${editingApp.personalDetails.firstName} ${editingApp.personalDetails.lastName || ''}` : 'Pending Form Submission'}</strong></p>
                 <p><span className="text-zinc-500">Registered Email:</span> {editingApp.user?.email || editingApp.personalDetails?.email}</p>
                 <p><span className="text-zinc-500">Mobile Number:</span> {editingApp.user?.phoneNumber || editingApp.personalDetails?.phoneNumber}</p>
+                <p><span className="text-zinc-500">District & Block:</span> <strong className="text-zinc-200">{editingApp.personalDetails?.district || 'Khordha'} (Block: {editingApp.personalDetails?.block || 'N/A'})</strong></p>
+                <p><span className="text-zinc-500">Target School Name:</span> <strong className="text-indigo-400">{editingApp.personalDetails?.schoolName || 'N/A'}</strong></p>
                 <p><span className="text-zinc-500">Category:</span> <strong className="text-indigo-400">{editingApp.category?.name || 'Pending Selection'}</strong></p>
               </div>
 
@@ -748,15 +839,20 @@ export default function AdminDashboardPage() {
                             <span className="text-[10px] text-zinc-500 font-mono block truncate">{doc.fileUrl}</span>
                           </div>
 
-                          <a
-                            href={doc.fileUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            download
-                            className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-[11px] font-bold transition-all shrink-0 flex items-center gap-1 shadow-sm"
-                          >
-                            <Download className="w-3.5 h-3.5" /> Download {pdf ? "PDF" : "File"}
-                          </a>
+                          <div className="flex gap-1.5 shrink-0">
+                            <button
+                              onClick={() => setPreviewFile({ url: doc.fileUrl, title: `${doc.documentType} - ${editingApp.applicationNo}`, isPdf: pdf })}
+                              className="px-2.5 py-1.5 bg-indigo-600/30 hover:bg-indigo-600 text-indigo-200 hover:text-white border border-indigo-500/40 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1 shadow-sm"
+                            >
+                              <Eye className="w-3.5 h-3.5" /> Preview
+                            </button>
+                            <button
+                              onClick={() => downloadDocument(doc.fileUrl, `${editingApp.applicationNo}_${doc.documentType}`)}
+                              className="px-2.5 py-1.5 bg-emerald-600/30 hover:bg-emerald-600 text-emerald-200 hover:text-white border border-emerald-500/40 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1 shadow-sm"
+                            >
+                              <Download className="w-3.5 h-3.5" /> Download
+                            </button>
+                          </div>
                         </div>
                       );
                     })

@@ -67,10 +67,18 @@ export async function GET(req: Request) {
       orderBy: { createdAt: "desc" },
     });
 
+    const formattedApplications = dbApplications.map((app) => ({
+      ...app,
+      documents: app.documents.map((d) => ({
+        ...d,
+        fileUrl: `/api/documents/${d.id}`,
+      })),
+    }));
+
     const masterList: any[] = [];
     const processedUserIds = new Set<string>();
 
-    for (const app of dbApplications) {
+    for (const app of formattedApplications) {
       masterList.push(app);
       if (app.userId) processedUserIds.add(app.userId);
     }
@@ -207,6 +215,19 @@ export async function DELETE(req: Request) {
     const { searchParams } = new URL(req.url);
     const applicationId = searchParams.get("id");
     const userId = searchParams.get("userId");
+    const purge = searchParams.get("purge");
+
+    if (purge === "all") {
+      await prisma.document.deleteMany({});
+      await prisma.personalDetails.deleteMany({});
+      await prisma.educationalDetails.deleteMany({});
+      await prisma.employmentDetails.deleteMany({});
+      await prisma.applicationStatusHistory.deleteMany({});
+      await prisma.application.deleteMany({});
+      await prisma.notification.deleteMany({});
+      await prisma.user.deleteMany({});
+      return NextResponse.json({ success: true, message: "All uploaded files and applications purged successfully!" });
+    }
 
     if (applicationId) {
       if (applicationId.startsWith("temp-")) {
