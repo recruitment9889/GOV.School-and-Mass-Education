@@ -451,16 +451,6 @@ export default function AdminDashboardPage() {
           </div>
           
           <div className="flex items-center gap-3">
-            <button 
-              onClick={fetchData} 
-              className="flex items-center gap-2 px-4 py-2 bg-zinc-900 border border-zinc-800 rounded-lg hover:bg-zinc-800 transition-colors text-xs font-medium"
-            >
-              Refresh Real-time Data
-            </button>
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-lg text-xs font-bold">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Live Supabase DB Sync
-            </div>
-
             <button
               onClick={handleAdminLogout}
               className="flex items-center gap-1.5 px-4 py-2 bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/30 rounded-lg text-xs font-bold transition-all shadow-sm"
@@ -582,7 +572,6 @@ export default function AdminDashboardPage() {
                   <th className="p-3.5">Applicant & Target School</th>
                   <th className="p-3.5">Registered Gmail</th>
                   <th className="p-3.5">Mobile OTP</th>
-                  <th className="p-3.5">Reg. Date & Time</th>
                   <th className="p-3.5">Status & Verification</th>
                   <th className="p-3.5">Submitted PDF & Image Files</th>
                   <th className="p-3.5 text-center">One-Click Decision</th>
@@ -592,7 +581,7 @@ export default function AdminDashboardPage() {
               <tbody className="divide-y divide-zinc-800/60">
                 {filteredApps.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="p-8 text-center text-zinc-500">
+                    <td colSpan={9} className="p-8 text-center text-zinc-500">
                       No applications found matching the selected filters.
                     </td>
                   </tr>
@@ -632,22 +621,6 @@ export default function AdminDashboardPage() {
                           {app.personalDetails?.email || app.user?.email || "N/A"}
                         </td>
                         <td className="p-3.5 text-zinc-400 font-mono">{app.user?.phoneNumber || "N/A"}</td>
-
-                        {/* Registration Date & Exact Time Column */}
-                        <td className="p-3.5 font-mono text-[11px]">
-                          {app.createdAt ? (
-                            <div>
-                              <div className="font-semibold text-zinc-200">
-                                {new Date(app.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
-                              </div>
-                              <div className="text-[10px] text-amber-400 font-bold flex items-center gap-1 mt-0.5">
-                                ⏰ {new Date(app.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}
-                              </div>
-                            </div>
-                          ) : (
-                            <span className="text-zinc-600">N/A</span>
-                          )}
-                        </td>
                         <td className="p-3.5 space-y-1">
                           <span
                             className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-extrabold ${
@@ -741,7 +714,7 @@ export default function AdminDashboardPage() {
                     <th className="p-3">User ID</th>
                     <th className="p-3">Registered Gmail</th>
                     <th className="p-3">Mobile Number</th>
-                    <th className="p-3">Registered Date</th>
+                    <th className="p-3">Registered Date & Time</th>
                     <th className="p-3">Status</th>
                     <th className="p-3 text-right">Remove</th>
                   </tr>
@@ -754,7 +727,22 @@ export default function AdminDashboardPage() {
                         <Mail className="w-3.5 h-3.5 text-indigo-400" /> {u.email}
                       </td>
                       <td className="p-3 text-zinc-400 font-mono">{u.phoneNumber}</td>
-                      <td className="p-3 text-zinc-400">{new Date(u.registeredAt).toLocaleDateString()}</td>
+                      
+                      {/* Exact Date & Time for Registered Users */}
+                      <td className="p-3 font-mono text-[11px]">
+                        {u.registeredAt ? (
+                          <div>
+                            <div className="font-semibold text-zinc-200">
+                              {new Date(u.registeredAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                            </div>
+                            <div className="text-[10px] text-amber-400 font-bold flex items-center gap-1 mt-0.5">
+                              ⏰ {new Date(u.registeredAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-zinc-600">N/A</span>
+                        )}
+                      </td>
                       <td className="p-3">
                         {u.hasSubmitted ? (
                           <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
@@ -808,7 +796,6 @@ export default function AdminDashboardPage() {
                 <p><span className="text-zinc-500">Registered Email:</span> <strong className="font-mono text-zinc-200">{editingApp.user?.email || editingApp.personalDetails?.email}</strong></p>
                 <p><span className="text-zinc-500">Registered Mobile:</span> <strong className="font-mono text-zinc-200">{editingApp.user?.phoneNumber || editingApp.personalDetails?.phoneNumber}</strong></p>
                 <p><span className="text-zinc-500">Registration Date & Time:</span> <strong className="font-mono text-amber-400">📅 {new Date(editingApp.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })} ⏰ {new Date(editingApp.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}</strong></p>
-                <p><span className="text-zinc-500">Account Password Status:</span> <strong className="font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">{editingApp.user?.passwordHash ? "•••••••• (Encrypted Hash Stored)" : "Gmail Auth Session"}</strong></p>
                 <p><span className="text-zinc-500">District & Block:</span> <strong className="text-zinc-200">{editingApp.personalDetails?.district || 'Khordha'} (Block: {editingApp.personalDetails?.block || 'N/A'})</strong></p>
                 <p><span className="text-zinc-500">Target School Name:</span> <strong className="text-indigo-400">{editingApp.personalDetails?.schoolName || 'N/A'}</strong></p>
                 <p><span className="text-zinc-500">Category:</span> <strong className="text-indigo-400">{editingApp.category?.name || 'Pending Selection'}</strong></p>
