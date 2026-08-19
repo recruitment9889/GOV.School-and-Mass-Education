@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Users, FileText, CheckCircle, XCircle, TrendingUp, BarChart3, Search, Edit3, X, Save, Mail, UserCheck, Download, Trash2, Key, ShieldCheck, Check, Printer, Eye, Image as ImageIcon, FileCheck, ExternalLink, LogOut } from "lucide-react";
+import { Users, FileText, CheckCircle, XCircle, TrendingUp, BarChart3, Search, Edit3, X, Save, Mail, UserCheck, Download, Trash2, Key, ShieldCheck, Check, Printer, Eye, EyeOff, Image as ImageIcon, FileCheck, ExternalLink, LogOut } from "lucide-react";
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -31,6 +31,7 @@ export default function AdminDashboardPage() {
   const [newStatus, setNewStatus] = useState("SUBMITTED");
   const [remarks, setRemarks] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [updating, setUpdating] = useState(false);
 
   // Lightbox Preview Modal State (Images or PDFs)
@@ -884,18 +885,37 @@ export default function AdminDashboardPage() {
                 </select>
               </div>
 
-              {/* Admin Reset Password */}
-              <div className="space-y-1">
-                <label className="font-semibold text-zinc-300 flex items-center gap-1.5">
-                  <Key className="w-3.5 h-3.5 text-indigo-400" /> Change Applicant Password
-                </label>
-                <input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Enter new password for applicant (Leave blank to keep unchanged)"
-                  className="w-full p-2.5 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 outline-none focus:border-indigo-500"
-                />
+              {/* Admin View & Change Password */}
+              <div className="space-y-2 p-3 bg-zinc-950 border border-zinc-800 rounded-xl">
+                <div className="flex items-center justify-between">
+                  <label className="font-semibold text-zinc-300 flex items-center gap-1.5">
+                    <Key className="w-3.5 h-3.5 text-indigo-400" /> Candidate Password Control
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="text-indigo-400 hover:text-indigo-300 text-xs font-bold flex items-center gap-1 bg-indigo-500/10 px-2.5 py-1 rounded border border-indigo-500/20 transition-all hover:bg-indigo-500/20"
+                  >
+                    {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    {showPassword ? "Hide Password" : "👁️ View Password"}
+                  </button>
+                </div>
+
+                {showPassword && (
+                  <div className="p-2.5 bg-zinc-900 rounded-lg border border-zinc-800 font-mono text-xs text-emerald-400 font-bold flex items-center justify-between">
+                    <span>Password: {editingApp.user?.plainPassword || (editingApp.user?.passwordHash ? "•••••••• (Encrypted Hash Stored)" : "Gmail Auth Session")}</span>
+                  </div>
+                )}
+
+                <div>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Type new password to change & save for applicant..."
+                    className="w-full p-2.5 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-100 outline-none focus:border-indigo-500 text-xs"
+                  />
+                </div>
               </div>
 
               {/* Remarks */}

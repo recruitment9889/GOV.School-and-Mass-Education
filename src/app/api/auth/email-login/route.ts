@@ -55,6 +55,7 @@ export async function POST(req: Request) {
         data: {
           email: normalizedEmail,
           passwordHash: hashed,
+          plainPassword: password,
         },
       });
 

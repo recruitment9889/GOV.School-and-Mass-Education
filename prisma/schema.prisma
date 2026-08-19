@@ -12,13 +12,14 @@ datasource db {
 // ==========================================
 
 model User {
-  id           String        @id @default(uuid())
-  phoneNumber  String        @default("")
-  email        String?       @unique
-  passwordHash String?
-  firebaseUid  String?       @unique
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id            String        @id @default(uuid())
+  phoneNumber   String        @default("")
+  email         String?       @unique
+  passwordHash  String?
+  plainPassword String?
+  firebaseUid   String?       @unique
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
   
   applications Application[]
   notifications Notification[]

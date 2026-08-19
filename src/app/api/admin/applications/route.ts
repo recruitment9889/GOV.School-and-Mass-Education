@@ -46,7 +46,7 @@ export async function GET(req: Request) {
       where,
       orderBy: { createdAt: "desc" },
       include: {
-        user: { select: { id: true, email: true, phoneNumber: true, passwordHash: true, createdAt: true } },
+        user: { select: { id: true, email: true, phoneNumber: true, plainPassword: true, passwordHash: true, createdAt: true } },
         category: { select: { id: true, name: true } },
         personalDetails: true,
         documents: true,
@@ -169,7 +169,10 @@ export async function PATCH(req: Request) {
       if (newPassword) {
         await prisma.user.update({
           where: { id: realUserId },
-          data: { passwordHash: hashPassword(newPassword) },
+          data: {
+            passwordHash: hashPassword(newPassword),
+            plainPassword: newPassword,
+          },
         });
       }
 
@@ -200,7 +203,10 @@ export async function PATCH(req: Request) {
     if (newPassword && updatedApp.userId) {
       await prisma.user.update({
         where: { id: updatedApp.userId },
-        data: { passwordHash: hashPassword(newPassword) },
+        data: {
+          passwordHash: hashPassword(newPassword),
+          plainPassword: newPassword,
+        },
       });
     }
 
