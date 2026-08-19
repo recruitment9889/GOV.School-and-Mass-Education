@@ -44,15 +44,15 @@ export async function GET(req: Request) {
 
     const dbApplications = await prisma.application.findMany({
       where,
+      orderBy: { createdAt: "desc" },
       include: {
-        user: { select: { id: true, email: true, phoneNumber: true } },
+        user: { select: { id: true, email: true, phoneNumber: true, passwordHash: true, createdAt: true } },
         category: { select: { id: true, name: true } },
         personalDetails: true,
         documents: true,
         educationDetails: true,
         employmentDetails: true,
       },
-      orderBy: { createdAt: "desc" },
     });
 
     const registeredUsers = await prisma.user.findMany({
