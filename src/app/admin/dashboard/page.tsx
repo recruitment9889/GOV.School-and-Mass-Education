@@ -902,8 +902,33 @@ export default function AdminDashboardPage() {
                 </div>
 
                 {showPassword && (
-                  <div className="p-2.5 bg-zinc-900 rounded-lg border border-zinc-800 font-mono text-xs text-emerald-400 font-bold flex items-center justify-between">
-                    <span>Password: {editingApp.user?.plainPassword || (editingApp.user?.passwordHash ? "•••••••• (Encrypted Hash Stored)" : "Gmail Auth Session")}</span>
+                  <div className="p-3 bg-zinc-900 rounded-lg border border-zinc-800 font-mono text-xs text-emerald-400 font-bold space-y-1.5">
+                    {editingApp.user?.plainPassword ? (
+                      <div className="flex items-center justify-between">
+                        <span className="text-zinc-400">Readable Password:</span>
+                        <span className="text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded border border-emerald-500/20 text-sm font-extrabold select-all">
+                          🔑 {editingApp.user.plainPassword}
+                        </span>
+                      </div>
+                    ) : editingApp.user?.passwordHash ? (
+                      <div className="space-y-1 text-[11px]">
+                        <div className="flex items-center justify-between text-zinc-400">
+                          <span>Account Type:</span>
+                          <span className="text-amber-400 font-semibold">Standard Email Account</span>
+                        </div>
+                        <div className="text-zinc-400 break-all">
+                          <span className="text-zinc-500 block">Stored Encrypted SHA-256 Hash:</span>
+                          <div className="p-2 bg-black/60 rounded border border-zinc-800 text-amber-300 font-mono text-[10px] mt-1 select-all break-all">
+                            {editingApp.user.passwordHash}
+                          </div>
+                        </div>
+                        <p className="text-[10px] text-zinc-500 italic mt-1">
+                          💡 Tip: Type a new password below and click &quot;Save Changes&quot; to reset to a readable password anytime.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="text-indigo-400 text-xs">Gmail Auth Session (No Static Password)</div>
+                    )}
                   </div>
                 )}
 
