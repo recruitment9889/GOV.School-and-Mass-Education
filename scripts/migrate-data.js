@@ -1,10 +1,10 @@
 const { Client } = require("pg");
 
 const supabaseUrl = process.env.SUPABASE_DIRECT_URL || "postgresql://postgres.wswnolhapvqwdpnfniqp:%40Santosh98210@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres";
-const neonUrl = process.env.DATABASE_URL || "postgresql://neondb_owner:npg_SKB1y7ElgiYX@ep-wandering-mud-axn4i9xe-pooler.c-4.us-east-2.aws.neon.tech/neondb?sslmode=require";
+const neonUrl = process.env.DATABASE_URL || "postgresql://neondb_owner:npg_kEKv6n1ZMVbl@ep-proud-fog-ayn76khq-pooler.c-5.us-east-2.aws.neon.tech/neondb?sslmode=require";
 
 async function migrate() {
-  console.log("🚀 Starting Chunked Zero Data Loss Migration to new Neon project (odisha-recruitment-v2)...");
+  console.log("🚀 Starting Zero Data Loss Migration to new Neon project (odisha-recruitment-v3)...");
 
   const supabaseClient = new Client({ connectionString: supabaseUrl, ssl: { rejectUnauthorized: false } });
   const neonClient = new Client({ connectionString: neonUrl, ssl: { rejectUnauthorized: false } });
@@ -40,7 +40,7 @@ async function migrate() {
 
       if (totalRows === 0) continue;
 
-      const chunkSize = table === "Document" ? 5 : 50;
+      const chunkSize = table === "Document" ? 10 : 50;
       let offset = 0;
       let insertedCount = 0;
 
