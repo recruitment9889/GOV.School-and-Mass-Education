@@ -49,7 +49,7 @@ export async function GET(req: Request) {
         user: { select: { id: true, email: true, phoneNumber: true, plainPassword: true, passwordHash: true, createdAt: true } },
         category: { select: { id: true, name: true } },
         personalDetails: true,
-        documents: true,
+        documents: { select: { id: true, applicationId: true, documentType: true, fileSize: true, uploadedAt: true } },
         educationDetails: true,
         employmentDetails: true,
       },
@@ -61,7 +61,7 @@ export async function GET(req: Request) {
           include: {
             category: { select: { id: true, name: true } },
             personalDetails: true,
-            documents: true,
+            documents: { select: { id: true, applicationId: true, documentType: true, fileSize: true, uploadedAt: true } },
           },
         },
       },
